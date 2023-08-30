@@ -6,8 +6,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - name: Setup-node
+      if: steps.npmCacheStep.outputd.cache-hit != 'true'
+      uses: actions/setup-node@v3
+      id: npmCache
       with:
          node-version: 18
          cache: 'npm'
-    - run: npm ci
+    - name: Setup-java
+      if: steps.javaCacheStep.outputd.cache-hit != 'true'
+      uses: actions/setup-java@v3
+      id: javaCache
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'maven'
+  test:
+    needs: build
+    runs-on: ${{ needs.build.outputs.runner }}
+    steps:
+      - name: run test
+        run: npm test
+      - name: maven test
+        run: mvn test
